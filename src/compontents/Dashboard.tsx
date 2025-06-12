@@ -6,32 +6,33 @@ import TransactionList from './TransactionList';
 import CardDetails from './CardDetails';
 import HeaderControls from './HeaderControls';
 
-const Dashboard: React.FC = () => {
+interface DashboardProps {
+  onToggleSidebar?: () => void;
+}
+
+const Dashboard: React.FC<DashboardProps> = ({ onToggleSidebar }) => {
   const { activeMenuItem } = useAppSelector(state => state.ui);
+  const breadcrumbMap: Record<string, string> = {
+    home: 'Home',
+    cards: 'Cards',
+    transactions: 'Transactions',
+    settings: 'Settings',
+  };
+
 
   return (
     <div className="flex-1 bg-gray-50">
-      <Header />
+      <Header onToggleSidebar={onToggleSidebar} />
+      <div className="px-6 pt-4 text-sm text-gray-600 flex items-center space-x-2">
+        <span>Home</span>
+        <span>{'>'}</span>
+        <span className="text-gray-900 font-medium">
+          {breadcrumbMap[activeMenuItem] || 'Dashboard'}
+        </span>
+      </div>
 
       <div className="p-6">
         {activeMenuItem === 'cards' && (
-          // <div className="space-y-6">
-          //       <CardsSection />
-          // </div>
-          
-          // <div className="flex gap-6 p-6 bg-gray-100 min-h-screen">
-          //   <HeaderControls />
-          //   {/* Left Panel */}
-          //   <div className="w-[30%] space-y-6">
-          //     <CardDetails />
-          //     <TransactionList />
-          //   </div>
-
-          //   {/* Right Panel */}
-          //   <div className="flex-1">
-          //     <CardsSection />
-          //   </div>
-          // </div>
           <div className="space-y-6">
             <HeaderControls />
             <div className="flex gap-6">
