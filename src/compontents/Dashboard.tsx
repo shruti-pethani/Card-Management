@@ -35,11 +35,11 @@ const Dashboard: React.FC = () => {
           <div className="space-y-6">
             <HeaderControls />
             <div className="flex gap-6">
-              <div className="w-[30%] space-y-6">
+              <div className="w-[40%] space-y-6">
                 <CardDetails />
                 <TransactionList />
               </div>
-              <div className="flex-1">
+              <div className="flex-1 w-[60%]">
                 <CardsSection />
               </div>
             </div>

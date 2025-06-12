@@ -7,7 +7,8 @@ interface CardsState {
   selectedCard: Card | null;
   showCardNumber: string | null;
   isAddCardModalOpen: boolean;
-  lockedCardId: string | null; // 🔒 New field
+  isLocked?: boolean;
+  isArchived?: boolean;
 }
 
 const initialState: CardsState = {
@@ -40,27 +41,12 @@ const initialState: CardsState = {
       addedToGPay: true,
       balance: 25000,
       cardBrand: 'visa',
-    },
-    {
-      id: '3',
-      type: 'credit',
-      bankName: 'HDFC',
-      cardNumber: '5234567890123456',
-      holderName: 'John Watson',
-      expiryDate: '07/26',
-      cvv: '123',
-      isActive: true,
-      isDefault: true,
-      addedToGPay: false,
-      creditLimit: 150000,
-      balance: 50000,
-      cardBrand: 'mastercard',
-    },
+    }
   ],
   selectedCard: null,
   showCardNumber: null,
   isAddCardModalOpen: false,
-  lockedCardId: null, // 🔒 initialize
+  isLocked: false,
 };
 
 const cardsSlice = createSlice({
@@ -111,10 +97,19 @@ const cardsSlice = createSlice({
       if (card) {
         card.addedToGPay = !card.addedToGPay;
       }
+      console.log(`Card with ID ${action.payload} GPay status toggled to ${card?.addedToGPay}`);
     },
-    // 🔒 Lock/Unlock Card Reducer
+    toggleArchiveStatus: (state, action: PayloadAction<string>) => {
+  const card = state.cards.find(card => card.id === action.payload);
+  if (card) {
+    card.isArchived = !card.isArchived;
+  }
+},
     toggleLockCard: (state, action: PayloadAction<string>) => {
-      state.lockedCardId = state.lockedCardId === action.payload ? null : action.payload;
+      const card = state.cards.find(card => card.id === action.payload);
+      if (card) {
+        card.isLocked = !card.isLocked;
+      }
     },
   },
 });
@@ -128,7 +123,8 @@ export const {
   setAddCardModalOpen,
   setCardAsDefault,
   toggleGPayStatus,
-  toggleLockCard, // 👈 export
+  toggleLockCard, 
+  toggleArchiveStatus
 } = cardsSlice.actions;
 
 export default cardsSlice.reducer;

@@ -7,7 +7,10 @@ import {
   setCardAsDefault,
   toggleGPayStatus,
   toggleLockCard,
+  toggleArchiveStatus,
 } from '../store/slices/cardsSlice';
+import logo from '../assets/mc.png';
+import gpayLogo from '../assets/gpay.png';
 
 interface CreditCardProps {
   card: Card;
@@ -15,9 +18,12 @@ interface CreditCardProps {
 
 const CreditCard: React.FC<CreditCardProps> = ({ card }) => {
   const dispatch = useAppDispatch();
-  const { showCardNumber, lockedCardId } = useAppSelector(state => state.cards);
+  const { showCardNumber } = useAppSelector(state => state.cards);
   const isNumberVisible = showCardNumber === card.id;
-  const isLocked = lockedCardId === card.id;
+  const isLocked = card.isLocked;
+  const isArchived = card.isArchived;
+  const addedToGPay = card.addedToGPay;
+  const isDefault = card.isDefault;
 
   const maskCardNumber = (number: string) => {
     return number.replace(/(\d{4})(\d{4})(\d{4})(\d{4})/, '•••• •••• •••• $4');
@@ -44,11 +50,9 @@ const CreditCard: React.FC<CreditCardProps> = ({ card }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-900">
-          {card.type === 'credit' ? 'Credit Cards' : 'Debit Cards'}
-        </h3>
+    <div className="flex flex-col items-center">
+      {/* Show/Hide Button */}
+      <div className="mb-2 item-center">
         <button
           onClick={handleToggleCardNumber}
           className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 text-sm font-medium"
@@ -58,102 +62,100 @@ const CreditCard: React.FC<CreditCardProps> = ({ card }) => {
         </button>
       </div>
 
-      <div className="flex items-start space-x-6">
+      {/* Card & Right Menu */}
+      <div className="flex w-full items-start gap-4">
         {/* Card Visual */}
         <div
-          className={`w-80 h-48 rounded-xl shadow-lg p-6 text-white relative overflow-hidden ${
-            card.type === 'credit'
-              ? 'bg-gradient-to-br from-blue-900 to-blue-700'
-              : 'bg-gradient-to-br from-gray-800 to-gray-600'
-          } ${isLocked ? 'opacity-40 grayscale pointer-events-none' : ''}`}
+          className={`w-96 h-56 rounded-lg shadow-md p-6 text-white relative overflow-hidden flex-shrink-0 ${isLocked || isArchived ? 'opacity-40 grayscale pointer-events-none' : ''
+            }`}
+          style={{ backgroundColor: '#0D4060' }}
         >
-          {/* Background Pattern */}
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-4 right-4 w-32 h-32 border border-white/20 rounded-full"></div>
-            <div className="absolute bottom-4 left-4 w-24 h-24 border border-white/20 rounded-full"></div>
-          </div>
-
           {/* Bank Logo */}
           <div className="absolute top-4 right-4">
             <div className="w-12 h-8 bg-white rounded flex items-center justify-center">
               <span className="text-xs font-bold text-gray-800">{card.bankName}</span>
             </div>
           </div>
-
-          {/* Card Brand */}
           <div className="absolute top-4 left-4">
-            <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-              <span className="text-xs font-bold">
-                {card.cardBrand === 'mastercard' ? 'MC' : card.cardBrand === 'visa' ? 'V' : 'R'}
-              </span>
-            </div>
+            {isLocked ? (
+              <Lock className="w-5 h-5 text-white" />
+            ) : isArchived ? (
+              <Archive className="w-5 h-5 text-white" />
+            ) : addedToGPay ? (
+              <img src={gpayLogo} alt="GPay" className="w-5 h-5 rounded-full bg-white p-0.5" />
+            ) : isDefault ? (
+              <Check className="w-5 h-5 text-white" />
+            )
+              : null}
+          </div>
+
+          {/* Cardholder Name */}
+          <div className="absolute top-16 left-6">
+            <p className="text-lg font-semibold">{card.holderName}</p>
           </div>
 
           {/* Card Number */}
-          <div className="absolute bottom-16 left-6 right-6">
-            <p className="text-lg font-mono tracking-wider">
+          <div className="absolute top-24 left-6">
+            <p className="tracking-widest font-mono text-xl">
               {isNumberVisible ? formatCardNumber(card.cardNumber) : maskCardNumber(card.cardNumber)}
             </p>
           </div>
 
-          {/* Cardholder Name and Expiry */}
-          <div className="absolute bottom-6 left-6 right-6 flex justify-between">
-            <div>
-              <p className="text-xs opacity-80">CARDHOLDER NAME</p>
-              <p className="text-sm font-semibold">{card.holderName}</p>
-            </div>
-            <div>
-              <p className="text-xs opacity-80">VALID TILL</p>
-              <p className="text-sm font-semibold">{card.expiryDate}</p>
-            </div>
+          {/* Valid Till & CVV */}
+          <div className="absolute bottom-6 left-6 text-sm font-medium">
+            <p>
+              <span className="font-semibold">Valid Till :</span> {card.expiryDate}
+            </p>
+          </div>
+          <div className="absolute bottom-6 left-48 text-sm font-medium">
+            <p>
+              <span className="font-semibold">CVV :</span> •••
+            </p>
           </div>
 
-          {/* CVV */}
-          <div className="absolute bottom-6 right-20">
-            <p className="text-xs opacity-80">CVV</p>
-            <p className="text-sm font-semibold">•••</p>
+          {/* Card Brand Logo */}
+          <div className="absolute bottom-4 right-7 ">
+            <img src={logo} alt="Card Brand" className="h-15 w-14 object-contain" />
           </div>
         </div>
 
-        {/* Card Actions */}
-        <div className="flex-1 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+        {/* Right Side Menu */}
+        <div className="h-56 ml-5 flex flex-col justify-center bg-[#E4F3F9] rounded-lg p-6 gap-4 flex-shrink-0">
+          <div className="grid grid-cols-2 gap-7">
             {/* Lock Card */}
             <button
               onClick={handleToggleLock}
-              className="flex flex-col items-center justify-center space-y-2 p-4 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              className="flex flex-col items-center space-y-1"
             >
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${isLocked ? 'bg-red-600' : 'bg-gray-600'}`}>
-                <Lock className="w-6 h-6 text-white" />
+              <div className={`w-10 h-10 rounded-full ${card.isLocked ? 'bg-gray-600' : 'bg-blue-500'} flex items-center justify-center`}>
+                <Lock className="w-5 h-5 text-white" />
               </div>
-              <span className="text-sm font-medium text-gray-700">
-                {isLocked ? 'Locked' : 'Lock Card'}
-              </span>
+              <span className="text-xs">{card.isLocked ? 'Unlock Card' : 'Lock Card'}</span>
             </button>
 
             {/* Archive */}
-            <button className="flex flex-col items-center justify-center space-y-2 p-4 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
-              <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
-                <Archive className="w-6 h-6 text-white" />
+            <button
+              onClick={() => dispatch(toggleArchiveStatus(card.id))}
+              className="flex flex-col items-center space-y-1"
+            >
+              <div className={`w-10 h-10 rounded-full ${card.isArchived ? 'bg-gray-600' : 'bg-blue-500'} flex items-center justify-center`}>
+                <Archive className="w-5 h-5 text-white" />
               </div>
-              <span className="text-sm font-medium text-gray-700">Archive</span>
+              <span className="text-xs">{card.isArchived ? 'Archived' : 'Archive'}</span>
             </button>
 
             {/* Set As Default */}
             <button
               onClick={handleSetAsDefault}
-              className={`flex flex-col items-center justify-center space-y-2 p-4 rounded-lg transition-colors ${
-                card.isDefault ? 'bg-green-100 hover:bg-green-200' : 'bg-gray-100 hover:bg-gray-200'
-              }`}
+              className="flex flex-col items-center space-y-1"
             >
               <div
-                className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                  card.isDefault ? 'bg-green-500' : 'bg-blue-400'
-                }`}
+                className={`w-10 h-10 rounded-full ${card.isDefault ? 'bg-gray-600' : 'bg-blue-500'
+                  } flex items-center justify-center`}
               >
-                <Check className="w-6 h-6 text-white" />
+                <Check className="w-5 h-5 text-white" />
               </div>
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-xs">
                 {card.isDefault ? 'Default' : 'Set As Default'}
               </span>
             </button>
@@ -161,19 +163,22 @@ const CreditCard: React.FC<CreditCardProps> = ({ card }) => {
             {/* Add to GPay */}
             <button
               onClick={handleToggleGPay}
-              className={`flex flex-col items-center justify-center space-y-2 p-4 rounded-lg transition-colors ${
-                card.addedToGPay ? 'bg-green-100 hover:bg-green-200' : 'bg-gray-100 hover:bg-gray-200'
-              }`}
+              className="flex flex-col items-center space-y-1"
             >
-              <div
-                className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                  card.addedToGPay ? 'bg-green-500' : 'bg-gradient-to-r from-red-500 to-yellow-500'
-                }`}
-              >
-                <Smartphone className="w-6 h-6 text-white" />
+              <div className="relative w-10 h-10">
+                <img
+                  src={gpayLogo}
+                  alt="GPay"
+                  className={`w-10 h-10 rounded-full object-cover transition duration-300`}
+                />
+                {addedToGPay && (
+                  <div className="absolute inset-0 flex items-center justify-center rounded-full bg-white bg-opacity-30">
+                    <Check className="w-5 h-5 text-white" />
+                  </div>
+                )}
               </div>
-              <span className="text-sm font-medium text-gray-700">
-                {card.addedToGPay ? 'Added to GPay' : 'Add to GPay'}
+              <span className="text-xs">
+                {'Add to GPay'}
               </span>
             </button>
           </div>

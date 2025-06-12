@@ -18,6 +18,8 @@ export interface Card {
   cvv: string;
   isActive: boolean;
   isDefault?: boolean;
+  isArchived?: boolean;
+  isLocked?: boolean;
   addedToGPay?: boolean;
   balance?: number;
   creditLimit?: number;
